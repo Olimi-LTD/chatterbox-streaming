@@ -136,6 +136,7 @@ class Conditionals:
 class StreamingMetrics:
     """Metrics for streaming TTS generation"""
     latency_to_first_chunk: Optional[float] = None
+    latency_to_first_token: Optional[float] = None
     rtf: Optional[float] = None
     total_generation_time: Optional[float] = None
     total_audio_duration: Optional[float] = None
@@ -509,6 +510,8 @@ class ChatterboxMultilingualTTS:
 
         # Update first‐chunk latency metric
         if metrics.chunk_count == 0:
+            if torch.cuda.is_available():
+                torch.cuda.synchronize()
             metrics.latency_to_first_chunk = time.time() - start_time
             if print_metrics:
                 print(f"Latency to first chunk: {metrics.latency_to_first_chunk:.3f}s")
@@ -578,6 +581,7 @@ class ChatterboxMultilingualTTS:
 
         total_audio_length = 0.0
         all_tokens_processed = []  # Keep track of all tokens processed so far
+        first_token_seen = False
         
         with torch.inference_mode():
             # Stream speech tokens
@@ -591,6 +595,15 @@ class ChatterboxMultilingualTTS:
             ):
                 # Extract only the conditional batch
                 token_chunk = token_chunk[0]
+
+                # ---- TTFT(token): фиксируем ровно при первом чанке токенов
+                if not first_token_seen:
+                    if torch.cuda.is_available():
+                        torch.cuda.synchronize()
+                    metrics.latency_to_first_token = time.time() - start_time
+                    first_token_seen = True
+                    if print_metrics:
+                        print(f"Latency to first token: {metrics.latency_to_first_token:.3f}s")
                 
                 # Process each chunk immediately
                 audio_tensor, audio_duration, success = self._process_token_buffer(
