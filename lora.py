@@ -20,7 +20,7 @@ from tqdm import tqdm
 from huggingface_hub import hf_hub_download
 
 # Import Chatterbox components
-from chatterbox.tts import ChatterboxTTS, punc_norm
+from chatterbox.mtl_tts import ChatterboxMultilingualTTS as ChatterboxTTS, punc_norm
 from chatterbox.models.s3gen import S3Gen, S3GEN_SR
 from chatterbox.models.s3tokenizer import S3_SR
 from chatterbox.models.voice_encoder import VoiceEncoder
