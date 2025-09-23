@@ -39,7 +39,7 @@ pip install -e .
 ## Basic TTS Generation
 ```python
 import torchaudio as ta
-from chatterbox.tts import ChatterboxTTS
+from chatterbox.mtl_tts import ChatterboxMultilingualTTS as ChatterboxTTS
 
 model = ChatterboxTTS.from_pretrained(device="cuda")
 text = "Ezreal and Jinx teamed up with Ahri, Yasuo, and Teemo to take down the enemy's Nexus in an epic late-game pentakill."
@@ -58,7 +58,7 @@ For real-time applications where you want to start playing audio as soon as it's
 ```python
 import torchaudio as ta
 import torch
-from chatterbox.tts import ChatterboxTTS
+from chatterbox.mtl_tts import ChatterboxMultilingualTTS as ChatterboxTTS
 
 model = ChatterboxTTS.from_pretrained(device="cuda")
 text = "Welcome to the world of streaming text-to-speech! This audio will be generated and played in real-time chunks."
@@ -79,7 +79,7 @@ ta.save("streaming_output.wav", final_audio, model.sr)
 ```python
 import torchaudio as ta
 import torch
-from chatterbox.tts import ChatterboxTTS
+from chatterbox.mtl_tts import ChatterboxMultilingualTTS as ChatterboxTTS
 
 model = ChatterboxTTS.from_pretrained(device="cuda")
 text = "This streaming synthesis will use a custom voice from the reference audio file."

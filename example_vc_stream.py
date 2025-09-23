@@ -3,7 +3,7 @@ import torchaudio as ta
 import torch
 import threading
 import time
-from chatterbox.tts import ChatterboxTTS
+from chatterbox.mtl_tts import ChatterboxMultilingualTTS as ChatterboxTTS
 
 # Try to import audio playback library
 try:

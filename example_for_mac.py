@@ -1,6 +1,6 @@
 import torch
 import torchaudio as ta
-from chatterbox.tts import ChatterboxTTS
+from chatterbox.mtl_tts import ChatterboxMultilingualTTS as ChatterboxTTS
 
 # Detect device (Mac with M1/M2/M3/M4)
 device = "mps" if torch.backends.mps.is_available() else "cpu"

@@ -6,7 +6,7 @@ from typing import Dict, List
 from dataclasses import dataclass
 
 # Import Chatterbox components
-from chatterbox.tts import ChatterboxTTS
+from chatterbox.mtl_tts import ChatterboxMultilingualTTS as ChatterboxTTS
 from huggingface_hub import hf_hub_download
 import shutil
 
