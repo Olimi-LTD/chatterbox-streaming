@@ -81,7 +81,7 @@ def load_lora_model(lora_checkpoint_path: str, device: str = "cuda"):
 
 # Load the ChatterBox model
 print("Loading ChatterBox model...")
-LORA_CHECKPOINT_PATH = os.getenv('LORA_CHECKPOINT_PATH')
+LORA_CHECKPOINT_PATH = "/home/incode/projects/chatterbox/chatterbox-streaming/checkpoint_epoch24_step14880.pt"
 
 if LORA_CHECKPOINT_PATH and os.path.exists(LORA_CHECKPOINT_PATH):
     print(f"Loading model with LoRA from {LORA_CHECKPOINT_PATH}")
