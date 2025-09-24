@@ -1,16 +1,13 @@
 import time
-import scipy
 import torch
 from fastapi import FastAPI, Request, HTTPException
 from fastapi.responses import StreamingResponse, JSONResponse, FileResponse
 import torchaudio
 from io import BytesIO
 import os
-import numpy as np
 from dotenv import load_dotenv
 import ffmpeg
 import asyncio
-from functools import lru_cache
 import sys
 
 load_dotenv()
@@ -99,7 +96,7 @@ async def synthesize(request: Request):
     data = await request.json()
     input_text = data.get('input', '')
     language_id = data.get('language_id', 'ar')
-    audio_prompt_path = data.get('audio_prompt_path')
+    audio_prompt_path = data.get('voice_id')
     speed = data.get('speed', 1.0)
     exaggeration = data.get('exaggeration', 0.7)
     cfg_weight = data.get('cfg_weight', 0.3)
@@ -110,6 +107,9 @@ async def synthesize(request: Request):
 
     if not input_text:
         raise HTTPException(status_code=400, detail="No text provided")
+    
+    if audio_prompt_path:
+        audio_prompt_path = os.path.join(cwd, audio_prompt_path + '.wav')
 
     # Validate audio prompt path if provided
     if audio_prompt_path and not os.path.exists(audio_prompt_path):
