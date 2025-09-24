@@ -98,12 +98,11 @@ async def synthesize(request: Request):
     language_id = data.get('language_id', 'ar')
     audio_prompt_path = data.get('voice_id')
     speed = data.get('speed', 1.0)
-    exaggeration = data.get('exaggeration', 0.7)
-    cfg_weight = data.get('cfg_weight', 0.3)
+    exaggeration = data.get('exaggeration', 0.8)
+    cfg_weight = data.get('cfg_weight', 0.5)
     temperature = data.get('temperature', 0.8)
-    chunk_size = data.get('chunk_size', 25)
     output_sample_rate = data.get('output_sample_rate', 8000)
-    stream_chunk_size = data.get('stream_chunk_size', 150)
+    stream_chunk_size = data.get('stream_chunk_size', 25)
 
     if not input_text:
         raise HTTPException(status_code=400, detail="No text provided")
@@ -135,8 +134,11 @@ async def synthesize(request: Request):
                 'exaggeration': exaggeration,
                 'cfg_weight': cfg_weight,
                 'temperature': temperature,
-                'chunk_size': chunk_size,
-                'print_metrics': True
+                'chunk_size': stream_chunk_size,
+                'print_metrics': True,
+                'context_window': 50,
+                'fade_duration': 0.05,
+                'max_new_tokens': 1024
             }
 
             # Add audio prompt if provided (for voice cloning)
