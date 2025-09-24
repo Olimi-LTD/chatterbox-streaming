@@ -170,7 +170,28 @@ async def synthesize(request: Request):
 
             # Save to file if required
             if store_file and all_chunks:
+                print(f"Number of chunks to combine: {len(all_chunks)}")
+                
+                # Debug: Check individual chunk shapes before concatenation
+                for i, chunk in enumerate(all_chunks):
+                    print(f"Chunk {i} shape before concatenation: {chunk.shape}")
+                
                 combined_audio = torch.cat(all_chunks, dim=-1)
+                print(f"Combined audio shape after concatenation: {combined_audio.shape}")
+                print(f"Combined audio dimensions: {combined_audio.ndim}D")
+                
+                # Check if we need to adjust dimensions
+                if combined_audio.ndim == 1:
+                    print("Converting 1D tensor to 2D by adding channel dimension")
+                    combined_audio = combined_audio.unsqueeze(0)
+                    print(f"Combined audio shape after unsqueeze: {combined_audio.shape}")
+                elif combined_audio.ndim == 3:
+                    print("Warning: 3D tensor detected, squeezing first dimension")
+                    combined_audio = combined_audio.squeeze(0)
+                    print(f"Combined audio shape after squeeze: {combined_audio.shape}")
+                
+                print(f"Final tensor shape for torchaudio.save: {combined_audio.shape}")
+                print(f"Expected format: (channels, samples) - should be 2D")
                 torchaudio.save(
                     os.path.join(app.config['STORAGE_FOLDER'], file_name), 
                     combined_audio, 
