@@ -173,7 +173,7 @@ async def synthesize(request: Request):
                 combined_audio = torch.cat(all_chunks, dim=-1)
                 torchaudio.save(
                     os.path.join(app.config['STORAGE_FOLDER'], file_name), 
-                    combined_audio.unsqueeze(0), 
+                    combined_audio, 
                     model.sr
                 )
                 print(f"Audio saved to {os.path.join(app.config['STORAGE_FOLDER'], file_name)}")
