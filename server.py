@@ -102,7 +102,7 @@ async def synthesize(request: Request):
     cfg_weight = data.get('cfg_weight', 0.5)
     temperature = data.get('temperature', 0.8)
     output_sample_rate = data.get('output_sample_rate', 8000)
-    stream_chunk_size = data.get('stream_chunk_size', 25)
+    chunk_size = data.get('chunk_size', 25)
 
     if not input_text:
         raise HTTPException(status_code=400, detail="No text provided")
@@ -134,7 +134,7 @@ async def synthesize(request: Request):
                 'exaggeration': exaggeration,
                 'cfg_weight': cfg_weight,
                 'temperature': temperature,
-                'chunk_size': stream_chunk_size,
+                'chunk_size': chunk_size,
                 'print_metrics': True,
                 'context_window': 50,
                 'fade_duration': 0.05,
