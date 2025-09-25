@@ -19,6 +19,8 @@ import random
 import sys
 from pathlib import Path
 import csv
+import os
+import hashlib
 
 @dataclass
 class RequestMetrics:
@@ -36,6 +38,7 @@ class RequestMetrics:
     audio_size_bytes: int
     status_code: Optional[int]
     chunks_received: int
+    audio_file_path: Optional[str] = None
 
 @dataclass
 class ConcurrencyMetrics:
@@ -83,6 +86,13 @@ class ChatterBoxBenchmark:
         
     async def make_request(self, session: aiohttp.ClientSession, text: str, concurrent_count: int) -> RequestMetrics:
         """Make a single request and measure metrics"""
+        # Create unique identifier for this request
+        text_hash = hashlib.md5(text.encode()).hexdigest()[:8]
+        timestamp = int(time.time() * 1000)  # milliseconds
+        request_id = f"{concurrent_count}x_{timestamp}_{text_hash}"
+        
+        print(f"🚀 Starting request {request_id} - Text: '{text[:50]}{'...' if len(text) > 50 else ''}' (Concurrent: {concurrent_count})")
+        
         payload = {
             "input": text,
             "language_id": "en",
@@ -93,6 +103,10 @@ class ChatterBoxBenchmark:
             "chunk_size": 25,
             "output_sample_rate": 8000
         }
+        
+        # Create output directory and file path
+        os.makedirs("storage", exist_ok=True)
+        audio_file_path = f"storage/audio_{request_id}.wav"
         
         metrics = RequestMetrics(
             concurrent_requests=concurrent_count,
@@ -107,7 +121,8 @@ class ChatterBoxBenchmark:
             error_message=None,
             audio_size_bytes=0,
             status_code=None,
-            chunks_received=0
+            chunks_received=0,
+            audio_file_path=audio_file_path
         )
         
         try:
@@ -118,27 +133,37 @@ class ChatterBoxBenchmark:
                     metrics.error_message = f"HTTP {response.status}: {await response.text()}"
                     metrics.end_time = time.time()
                     metrics.total_time = metrics.end_time - metrics.start_time
+                    print(f"❌ Request {request_id} failed with status {response.status}")
                     return metrics
                 
-                # Read streaming response
+                # Read streaming response and save to file
                 first_chunk = True
-                async for chunk in response.content.iter_chunked(1024):
-                    if first_chunk:
-                        metrics.first_chunk_time = time.time()
-                        metrics.time_to_first_chunk = metrics.first_chunk_time - metrics.start_time
-                        first_chunk = False
-                    
-                    metrics.audio_size_bytes += len(chunk)
-                    metrics.chunks_received += 1
+                print(f"📡 Request {request_id} - Receiving audio chunks...")
+                
+                with open(audio_file_path, 'wb') as audio_file:
+                    async for chunk in response.content.iter_chunked(1024):
+                        if first_chunk:
+                            metrics.first_chunk_time = time.time()
+                            metrics.time_to_first_chunk = metrics.first_chunk_time - metrics.start_time
+                            print(f"⚡ Request {request_id} - First chunk received in {metrics.time_to_first_chunk:.2f}s")
+                            first_chunk = False
+                        
+                        audio_file.write(chunk)
+                        metrics.audio_size_bytes += len(chunk)
+                        metrics.chunks_received += 1
                 
                 metrics.success = True
+                print(f"✅ Request {request_id} completed - Audio saved to {audio_file_path} ({metrics.audio_size_bytes} bytes, {metrics.chunks_received} chunks)")
                 
         except asyncio.TimeoutError:
             metrics.error_message = "Request timeout"
+            print(f"⏰ Request {request_id} timed out after 120s")
         except aiohttp.ClientError as e:
             metrics.error_message = f"Client error: {str(e)}"
+            print(f"❌ Request {request_id} client error: {str(e)}")
         except Exception as e:
             metrics.error_message = f"Unexpected error: {str(e)}"
+            print(f"💥 Request {request_id} unexpected error: {str(e)}")
         finally:
             metrics.end_time = time.time()
             metrics.total_time = metrics.end_time - metrics.start_time
@@ -197,7 +222,8 @@ class ChatterBoxBenchmark:
                             error_message=str(result),
                             audio_size_bytes=0,
                             status_code=None,
-                            chunks_received=0
+                            chunks_received=0,
+                            audio_file_path=None
                         )
                         tasks.append(error_metrics)
                     else:
@@ -209,7 +235,7 @@ class ChatterBoxBenchmark:
         
         return tasks
     
-    def calculate_metrics(self, results: List[RequestMetrics]) -> ConcurrencyMetrics:
+    def calculate_metrics(self, results: List[RequestMetrics]) -> Optional[ConcurrencyMetrics]:
         """Calculate aggregated metrics for a concurrency level"""
         if not results:
             return None
@@ -241,7 +267,7 @@ class ChatterBoxBenchmark:
             avg_audio_size=statistics.mean(audio_sizes) if audio_sizes else 0,
             requests_per_second=len(successful_results) / statistics.mean(total_times) if total_times and statistics.mean(total_times) > 0 else 0,
             error_rate=(len(failed_results) / len(results)) * 100 if results else 0,
-            avg_text_length=statistics.mean(text_lengths) if text_lengths else 0
+            avg_text_length=int(statistics.mean(text_lengths)) if text_lengths else 0
         )
     
     def print_results(self, metrics: ConcurrencyMetrics, detailed_results: List[RequestMetrics]):
@@ -263,6 +289,12 @@ class ChatterBoxBenchmark:
         print(f"   Avg Audio Size: {metrics.avg_audio_size/1024:.1f} KB")
         print(f"   Requests/Second: {metrics.requests_per_second:.2f}")
         
+        # Count saved audio files
+        saved_audio_files = len([r for r in detailed_results if r.success and r.audio_file_path])
+        print(f"   💾 Audio Files Saved: {saved_audio_files}")
+        if saved_audio_files > 0:
+            print(f"   📁 Audio Directory: storage/")
+        
         # Show errors if any
         failed_results = [r for r in detailed_results if not r.success]
         if failed_results:
@@ -283,7 +315,7 @@ class ChatterBoxBenchmark:
             fieldnames = [
                 'concurrent_requests', 'text_length', 'text_content', 'start_time',
                 'total_time', 'time_to_first_chunk', 'success', 'error_message',
-                'audio_size_bytes', 'status_code', 'chunks_received'
+                'audio_size_bytes', 'status_code', 'chunks_received', 'audio_file_path'
             ]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
             writer.writeheader()
