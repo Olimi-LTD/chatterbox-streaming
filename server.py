@@ -121,7 +121,7 @@ async def synthesize(request: Request):
     print('Received stream data:', data)
 
     async def generate_chunks():
-        #async with semaphore:
+        async with semaphore:
             t0 = time.time()
             
             all_chunks = []
