@@ -88,7 +88,7 @@ else:
     model = ChatterboxMultilingualTTS.from_pretrained(device="cuda")
 
 # Semaphore to limit concurrent requests
-semaphore = asyncio.Semaphore(10)  # Adjust based on GPU capacity
+semaphore = asyncio.Semaphore(2)  # Adjust based on GPU capacity
 
 # Route to synthesize speech with voice cloning support
 @app.post('/stream/audio/speech')
@@ -152,11 +152,8 @@ async def synthesize(request: Request):
                     if metrics.latency_to_first_chunk:
                         print(f"First chunk latency: {metrics.latency_to_first_chunk:.3f}s")
                 
-                print(f"Generated chunk {metrics.chunk_count if hasattr(metrics, 'chunk_count') else chunk_count}, RTF: {metrics.rtf:.3f}" if hasattr(metrics, 'rtf') and metrics.rtf else f"Chunk {chunk_count}")
-
                 # Move tensor to CPU and convert to numpy array
                 chunk_cpu = audio_chunk.cpu().detach().numpy()
-                print(f"Chunk shape: {chunk_cpu.shape}")
 
                 if store_file:
                     all_chunks.append(audio_chunk)
