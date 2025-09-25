@@ -88,7 +88,7 @@ else:
     model = ChatterboxMultilingualTTS.from_pretrained(device="cuda")
 
 # Semaphore to limit concurrent requests
-semaphore = asyncio.Semaphore(2)  # Adjust based on GPU capacity
+semaphore = asyncio.Semaphore(10)  # Adjust based on GPU capacity
 
 # Route to synthesize speech with voice cloning support
 @app.post('/stream/audio/speech')
@@ -121,7 +121,7 @@ async def synthesize(request: Request):
     print('Received stream data:', data)
 
     async def generate_chunks():
-        async with semaphore:
+        #async with semaphore:
             t0 = time.time()
             
             all_chunks = []
