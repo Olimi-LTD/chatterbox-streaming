@@ -56,7 +56,7 @@ class ConcurrencyMetrics:
     avg_text_length: int
 
 class ChatterBoxBenchmark:
-    def __init__(self, base_url: str = "http://localhost:5000"):
+    def __init__(self, base_url: str = "http://localhost:6401"):
         self.base_url = base_url.rstrip('/')
         self.endpoint = f"{self.base_url}/stream/audio/speech"
         
