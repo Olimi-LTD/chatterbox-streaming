@@ -95,7 +95,7 @@ class ChatterBoxBenchmark:
         
         payload = {
             "input": text,
-            "language_id": "en",
+            "language_id": "ar",
             "speed": 1.0,
             "exaggeration": 0.7,
             "cfg_weight": 0.3,
