@@ -97,6 +97,7 @@ semaphore = asyncio.Semaphore(2)  # Adjust based on GPU capacity
 @app.post('/stream/audio/speech')
 async def synthesize(request: Request):
     data = await request.json()
+    print('Received data:', data)
     input_text = data.get('input', '')
     language_id = data.get('language_id', 'ar')
     audio_prompt_path = data.get('voice_id')
