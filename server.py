@@ -9,6 +9,10 @@ from dotenv import load_dotenv
 import ffmpeg
 import asyncio
 import sys
+from pydub import AudioSegment
+import io
+import numpy as np
+
 
 load_dotenv()
 
@@ -158,13 +162,26 @@ async def synthesize(request: Request):
                 if store_file:
                     all_chunks.append(audio_chunk)
 
-                # Use ffmpeg-python to convert numpy array to mu-law format
-                out, _ = (
-                    ffmpeg.input('pipe:', format='f32le', acodec='pcm_f32le', ar=model.sr, channels=1)
-                    .output('pipe:', format='mulaw', ar=output_sample_rate)
-                    .run(input=chunk_cpu.tobytes(), capture_stdout=True, quiet=True)
+                # Convert numpy array to AudioSegment
+                # Ensure the audio is in the correct format (float32 to int16)
+                chunk_int16 = (chunk_cpu * 32767).astype(np.int16)
+                
+                # Create AudioSegment from raw data
+                audio_segment = AudioSegment(
+                    data=chunk_int16.tobytes(),
+                    sample_width=2,  # 16-bit = 2 bytes
+                    frame_rate=model.sr,
+                    channels=1
                 )
-                yield out
+                
+                # Resample to output sample rate if different
+                if output_sample_rate != model.sr:
+                    audio_segment = audio_segment.set_frame_rate(output_sample_rate)
+                
+                # Export to mu-law format
+                buffer = io.BytesIO()
+                audio_segment.export(buffer, format='mulaw', codec='pcm_mulaw')
+                yield buffer.getvalue()
                 chunk_count += 1
 
             # Save to file if required
