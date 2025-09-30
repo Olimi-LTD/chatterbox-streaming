@@ -6,7 +6,6 @@ import torchaudio
 from io import BytesIO
 import os
 from dotenv import load_dotenv
-import ffmpeg
 import asyncio
 import sys
 from pydub import AudioSegment
@@ -276,82 +275,6 @@ async def generate_audio(request: Request):
                 yield chunk
 
     return StreamingResponse(generate_audio_stream(), media_type='audio/wav')
-
-# Route for voice cloning with file upload
-@app.post('/voice-clone/stream')
-async def voice_clone_stream(request: Request):
-    """Enhanced voice cloning endpoint with streaming"""
-    data = await request.json()
-    input_text = data.get('input', '')
-    language_id = data.get('language_id', 'ar')
-    audio_prompt_path = data.get('audio_prompt_path')
-    exaggeration = data.get('exaggeration', 0.6)
-    cfg_weight = data.get('cfg_weight', 0.3)
-    temperature = data.get('temperature', 0.8)
-    chunk_size = data.get('chunk_size', 25)
-    output_sample_rate = data.get('output_sample_rate', 8000)
-
-    if not input_text:
-        raise HTTPException(status_code=400, detail="No text provided")
-    
-    if not audio_prompt_path:
-        raise HTTPException(status_code=400, detail="Audio prompt path required for voice cloning")
-    
-    if not os.path.exists(audio_prompt_path):
-        raise HTTPException(status_code=400, detail=f"Audio prompt file not found: {audio_prompt_path}")
-
-    # Check if we need to store the audio in a file
-    store_file = request.query_params.get('type') == 'file'
-    file_name = request.query_params.get('name', 'voice_clone_output.wav') if store_file else None
-
-    print('Voice cloning request:', data)
-
-    async def generate_voice_clone_chunks():
-        async with semaphore:
-            t0 = time.time()
-            all_chunks = []
-            chunk_count = 0
-
-            for audio_chunk, metrics in model.generate_stream(
-                text=input_text,
-                audio_prompt_path=audio_prompt_path,
-                exaggeration=exaggeration,
-                cfg_weight=cfg_weight,
-                temperature=temperature,
-                chunk_size=chunk_size,
-                language_id=language_id,
-                print_metrics=True
-            ):
-                if chunk_count == 0:
-                    print(f"Time to first chunk: {time.time() - t0}")
-                    if hasattr(metrics, 'latency_to_first_chunk') and metrics.latency_to_first_chunk:
-                        print(f"First chunk latency: {metrics.latency_to_first_chunk:.3f}s")
-                
-                chunk_cpu = audio_chunk.cpu().detach().numpy()
-                
-                if store_file:
-                    all_chunks.append(audio_chunk)
-
-                # Convert to mu-law format for streaming
-                out, _ = (
-                    ffmpeg.input('pipe:', format='f32le', acodec='pcm_f32le', ar=model.sr, channels=1)
-                    .output('pipe:', format='mulaw', ar=output_sample_rate)
-                    .run(input=chunk_cpu.tobytes(), capture_stdout=True, quiet=True)
-                )
-                yield out
-                chunk_count += 1
-
-            # Save complete audio if requested
-            if store_file and all_chunks:
-                final_audio = torch.cat(all_chunks, dim=-1)
-                torchaudio.save(
-                    os.path.join(app.config['STORAGE_FOLDER'], file_name), 
-                    final_audio.unsqueeze(0), 
-                    model.sr
-                )
-                print(f"Voice clone audio saved to {os.path.join(app.config['STORAGE_FOLDER'], file_name)}")
-
-    return StreamingResponse(generate_voice_clone_chunks(), media_type='audio/x-mulaw')
 
 # Route for model info
 @app.get('/model/info')
