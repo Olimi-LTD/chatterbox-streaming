@@ -100,9 +100,8 @@ async def synthesize(request: Request):
     input_text = data.get('input', '')
     language_id = data.get('language_id', 'ar')
     audio_prompt_path = data.get('voice_id')
-    speed = data.get('speed', 1.0)
+    cfg_weight = data.get('speed', 1.0) / 2.0  # Speed is inversely related to cfg_weight
     exaggeration = data.get('exaggeration', 0.6)
-    cfg_weight = data.get('cfg_weight', 0.5)
     temperature = data.get('temperature', 0.8)
     output_sample_rate = data.get('output_sample_rate', 8000)
     chunk_size = data.get('chunk_size', 50)
