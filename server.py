@@ -78,7 +78,7 @@ def load_lora_model(lora_checkpoint_path: str, device: str = "cuda"):
 
 # Load the ChatterBox model
 print("Loading ChatterBox model...")
-LORA_CHECKPOINT_PATH = "/home/incode/projects/chatterbox-streaming/checkpoint_epoch24_step14880.pt"
+LORA_CHECKPOINT_PATH = "/home/incode/projects/chatterbox-streaming/checkpoint_epoch38_step24000.pt"
 
 if LORA_CHECKPOINT_PATH and os.path.exists(LORA_CHECKPOINT_PATH):
     print(f"Loading model with LoRA from {LORA_CHECKPOINT_PATH}")
@@ -88,7 +88,7 @@ else:
     model = ChatterboxMultilingualTTS.from_pretrained(device="cuda")
 
 # Semaphore to limit concurrent requests
-semaphore = asyncio.Semaphore(10)  # Adjust based on GPU capacity
+semaphore = asyncio.Semaphore(2)  # Adjust based on GPU capacity
 
 # Route to synthesize speech with voice cloning support
 @app.post('/stream/audio/speech')
@@ -98,11 +98,11 @@ async def synthesize(request: Request):
     language_id = data.get('language_id', 'ar')
     audio_prompt_path = data.get('voice_id')
     speed = data.get('speed', 1.0)
-    exaggeration = data.get('exaggeration', 0.8)
+    exaggeration = data.get('exaggeration', 0.6)
     cfg_weight = data.get('cfg_weight', 0.5)
     temperature = data.get('temperature', 0.8)
     output_sample_rate = data.get('output_sample_rate', 8000)
-    chunk_size = data.get('chunk_size', 25)
+    chunk_size = data.get('chunk_size', 50)
 
     if not input_text:
         raise HTTPException(status_code=400, detail="No text provided")
@@ -136,9 +136,9 @@ async def synthesize(request: Request):
                 'temperature': temperature,
                 'chunk_size': chunk_size,
                 'print_metrics': True,
-                'context_window': 50,
+                'context_window': 10,
                 'fade_duration': 0.05,
-                'max_new_tokens': 1024
+                'max_new_tokens': int(len(input_text)*2 + 10)
             }
 
             # Add audio prompt if provided (for voice cloning)
@@ -208,10 +208,10 @@ async def generate_audio(request: Request):
     language_id = data.get('language_id', 'ar')
     audio_prompt_path = data.get('audio_prompt_path')
     speed = data.get('speed', 1.0)
-    exaggeration = data.get('exaggeration', 0.7)
-    cfg_weight = data.get('cfg_weight', 0.3)
+    exaggeration = data.get('exaggeration', 0.6)
+    cfg_weight = data.get('cfg_weight', 0.5)
     temperature = data.get('temperature', 0.8)
-    chunk_size = data.get('chunk_size', 25)
+    chunk_size = data.get('chunk_size', 50)
 
     if not input_text:
         raise HTTPException(status_code=400, detail="No text provided")
@@ -232,7 +232,10 @@ async def generate_audio(request: Request):
             'cfg_weight': cfg_weight,
             'temperature': temperature,
             'chunk_size': chunk_size,
-            'print_metrics': True
+            'print_metrics': True,
+            'context_window': 100,
+            'fade_duration': 1,
+            'max_new_tokens': int(len(input_text)*2 + 10)
         }
 
         # Add audio prompt if provided (for voice cloning)
@@ -265,7 +268,7 @@ async def voice_clone_stream(request: Request):
     input_text = data.get('input', '')
     language_id = data.get('language_id', 'ar')
     audio_prompt_path = data.get('audio_prompt_path')
-    exaggeration = data.get('exaggeration', 0.7)
+    exaggeration = data.get('exaggeration', 0.6)
     cfg_weight = data.get('cfg_weight', 0.3)
     temperature = data.get('temperature', 0.8)
     chunk_size = data.get('chunk_size', 25)

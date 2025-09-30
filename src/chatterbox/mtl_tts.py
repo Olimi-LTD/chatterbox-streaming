@@ -580,7 +580,7 @@ class ChatterboxMultilingualTTS:
 
         # IMPORTANT: Calculate reasonable max_new_tokens based on text length
         estimated_tokens = len(text) * 2  # Rough estimate
-        max_new_tokens = min(max_new_tokens, max(estimated_tokens, 50))
+        max_new_tokens = max_new_tokens  # min(max_new_tokens*2, max(estimated_tokens, 50))
         
         print(f"Text length: {len(text)}, Using max_new_tokens: {max_new_tokens}")
 
