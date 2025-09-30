@@ -211,7 +211,7 @@ async def synthesize(request: Request):
                 torchaudio.save(
                     os.path.join(app.config['STORAGE_FOLDER'], file_name), 
                     combined_audio, 
-                    model.sr
+                    output_sample_rate
                 )
                 print(f"Audio saved to {os.path.join(app.config['STORAGE_FOLDER'], file_name)}")
 
