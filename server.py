@@ -174,6 +174,7 @@ async def synthesize(request: Request):
                 )
                 
                 # Resample to output sample rate if different
+                print(f"Original sample rate: {model.sr}, Output sample rate: {output_sample_rate}")
                 if output_sample_rate != model.sr:
                     audio_segment = audio_segment.set_frame_rate(output_sample_rate)
                 
