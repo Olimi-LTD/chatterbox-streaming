@@ -143,7 +143,7 @@ async def synthesize(request: Request):
                 'cfg_weight': cfg_weight,
                 'temperature': temperature,
                 'chunk_size': chunk_size,
-                'print_metrics': True,
+                'print_metrics': False,
                 'context_window': 10,
                 'fade_duration': 0.05,
                 'max_new_tokens': max_new_tokens
