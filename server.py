@@ -15,7 +15,7 @@ import numpy as np
 
 load_dotenv()
 
-PORT = int(os.getenv('PORT', 5000))
+PORT = int(os.getenv('PORT', 6401))
 
 # Add the source path for chatterbox imports
 CHATTERBOX_SRC_PATH = os.getenv('CHATTERBOX_SRC_PATH', '/home/incode/projects/chatterbox2/chatterbox-streaming/src')
@@ -131,6 +131,11 @@ async def synthesize(request: Request):
             chunk_count = 0
 
             # Prepare generation parameters
+            estimated_tokens = len(input_text) * 2
+            additional_tokens = 10
+            if estimated_tokens > 170:
+                additional_tokens = 0 
+            max_new_tokens = estimated_tokens + additional_tokens
             generation_params = {
                 'text': input_text,
                 'language_id': language_id,
@@ -141,7 +146,7 @@ async def synthesize(request: Request):
                 'print_metrics': True,
                 'context_window': 10,
                 'fade_duration': 0.05,
-                'max_new_tokens': int(len(input_text)*2 + 10)
+                'max_new_tokens': max_new_tokens
             }
 
             # Add audio prompt if provided (for voice cloning)
