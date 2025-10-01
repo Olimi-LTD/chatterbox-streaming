@@ -605,6 +605,7 @@ class ChatterboxMultilingualTTS:
                 
                 # SAFETY: Stop if we've generated too many tokens
                 if token_count > max_new_tokens:
+                    print(f"Generated {token_chunk}")
                     print(f"Reached token limit ({token_count}/{max_new_tokens}), stopping")
                     break
 
