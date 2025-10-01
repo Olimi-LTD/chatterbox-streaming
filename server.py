@@ -105,7 +105,7 @@ async def synthesize(request: Request):
     exaggeration = data.get('exaggeration', 0.3)
     temperature = data.get('temperature', 0.5)
     output_sample_rate = data.get('output_sample_rate', 8000)
-    chunk_size = data.get('chunk_size', 50)
+    chunk_size = data.get('chunk_size', 25)
 
     if not input_text:
         raise HTTPException(status_code=400, detail="No text provided")
