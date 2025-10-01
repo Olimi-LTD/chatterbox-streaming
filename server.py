@@ -133,7 +133,7 @@ async def synthesize(request: Request):
             # Prepare generation parameters
             estimated_tokens = len(input_text) * 2
             additional_tokens = 10
-            if estimated_tokens > 160:
+            if estimated_tokens > 150:
                 additional_tokens = 0 
             max_new_tokens = estimated_tokens + additional_tokens
             generation_params = {
