@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 license = {file = "LICENSE"}
 authors = [
-    {name = "davidbrowne17", email = "davidbrowne17@gmail.com"}
+    {name = "Sameh A. Elalfo", email = "sameh.elalfi.mail@gmail.com"}
 ]
 dependencies = [
     "numpy~=1.26.0",
@@ -23,12 +23,16 @@ dependencies = [
     "matplotlib",
     "whisper-openai",
     "jiwer",
-    "sounddevice==0.5.2"
+    "sounddevice==0.5.2",
+    "fastapi==0.118.0",
+    "dotenv==0.9.9",
+    "pydub==0.25.1",
+    "uvicorn"
 ]
 
 [project.urls]
-Homepage = "https://github.com/davidbrowne17/chatterbox-streaming"
-Repository = "https://github.com/davidbrowne17/chatterbox-streaming"
+Homepage = "https://github.com/Olimi-LTD/chatterbox-streaming"
+Repository = "https://github.com/Olimi-LTD/chatterbox-streaming"
 
 [build-system]
 requires = ["setuptools>=61.0"]
